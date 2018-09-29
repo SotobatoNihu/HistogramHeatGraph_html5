@@ -12,7 +12,7 @@
 (function () {
     'use strict';
     // default settings
-    var NicoHeatGraph = function(){
+    const NicoHeatGraph = function(){
         this.MINIMUMBARNUM=50;
         this.DEFAULTINTERBAL=10;
         this.MAXCOMMENTNUM=30;
@@ -68,10 +68,10 @@ display: none;
         });
     };
     function getCommentData() {
-        var ApiJsonData=JSON.parse(document.getElementById('js-initial-watch-data').getAttribute('data-api-data'));
-        var thread_id;
-        var video_id;
-        var user_id;
+        const ApiJsonData = JSON.parse(document.getElementById('js-initial-watch-data').getAttribute('data-api-data'));
+        let thread_id;
+        let video_id;
+        let user_id;
         if(ApiJsonData.video.dmcInfo !== null){
             thread_id=ApiJsonData.video.dmcInfo.thread.thread_id;
             video_id=ApiJsonData.video.dmcInfo.video.video_id;
@@ -105,10 +105,10 @@ display: none;
     NicoHeatGraph.prototype.drowgraph = function(commentData,$canvas){
         const $commentgraph = this.$commentgraph;
         const $commentlist = this.$commentlist;
-        var ApiJsonData=JSON.parse(document.getElementById('js-initial-watch-data').getAttribute('data-api-data'));
-        var playerWidth =parseFloat($canvas.css("width"));
-        var videoTotalTime = ApiJsonData.video.dmcInfo !== null ?  ApiJsonData.video.dmcInfo.video.length_seconds : ApiJsonData.video.duration;
-        var barTimeInterval;
+        const ApiJsonData=JSON.parse(document.getElementById('js-initial-watch-data').getAttribute('data-api-data'));
+        const playerWidth =parseFloat($canvas.css("width"));
+        const videoTotalTime = ApiJsonData.video.dmcInfo !== null ?  ApiJsonData.video.dmcInfo.video.length_seconds : ApiJsonData.video.duration;
+        let barTimeInterval;
 
         //TODO 非常に長い（２，３時間以上）動画の処理
         //長い動画
@@ -130,12 +130,11 @@ display: none;
             '003165',  '00458f',  '0058b5','005fc4', '006adb',
             '0072ec', '007cff', '55a7ff','3d9bff'
         ];
-        var listCounts = (new Array(this.barIndexNum+1)).fill(0);
-        var listMessages = (new Array(this.barIndexNum+1)).fill("");
-        var listTimes = (new Array(this.barIndexNum+1)).fill("");
-        var lastBarTimeIntervalGap = Math.floor(videoTotalTime- (this.barIndexNum * barTimeInterval));
-        var barWidth = playerWidth / this.barIndexNum;
-        var barTimePoint = 0;
+        let listCounts = (new Array(this.barIndexNum+1)).fill(0);
+        const listMessages = (new Array(this.barIndexNum+1)).fill("");
+        const listTimes = (new Array(this.barIndexNum+1)).fill("");
+        const lastBarTimeIntervalGap = Math.floor(videoTotalTime- (this.barIndexNum * barTimeInterval));
+        const barWidth = playerWidth / this.barIndexNum;
 
         const MAXCOMMENTNUM=this.MAXCOMMENTNUM;
 
@@ -145,7 +144,7 @@ display: none;
             if (videoTotalTime<=vpos){
                 vpos=videoTotalTime;
             }
-            let section=Math.floor(vpos/barTimeInterval);
+            const section=Math.floor(vpos/barTimeInterval);
             listCounts[section]++;
             if(listCounts[section]<= MAXCOMMENTNUM){
                 let comment=$(this).text().replace(/"|<|&lt;/g, ' ').replace(/\n/g, '<br>');
@@ -155,14 +154,14 @@ display: none;
 
         let starttime=0;
         let nexttime=0;
-        for (var i = 0; i < this.barIndexNum; i++) {
+        for (let i = 0; i < this.barIndexNum; i++) {
             starttime=nexttime;
             nexttime+=barTimeInterval;
             if(i==this.barIndexNum-1){
                 nexttime+=lastBarTimeIntervalGap;
             }
-            let startmin=Math.floor(starttime/60);
-            let startsec=Math.floor(starttime-startmin*60);
+            const startmin=Math.floor(starttime/60);
+            const startsec=Math.floor(starttime-startmin*60);
             let endmin=Math.floor(nexttime/60);
             let endsec=Math.ceil(nexttime-endmin*60);
             if(59 < endsec){
@@ -174,16 +173,15 @@ display: none;
 
         // TODO なぜかthis.barIndexNum以上の配列ができる
         listCounts=listCounts.slice(0, this.barIndexNum);
-        var listCountMax = Math.max.apply(null,listCounts);
+        const listCountMax = Math.max.apply(null,listCounts);
         const barColorRatio = (barColors.length - 1) / listCountMax;
 
         $commentgraph.empty();
         $commentgraph.height(this.GRAPHHEIGHT);
-        var barColor;
-        var barBackground;
-        for (i = 0; i < this.barIndexNum; i++) {
-            barColor = barColors[Math.floor(listCounts[i] * barColorRatio)];
-            barBackground = `linear-gradient(to top, #${barColor}, #${barColor} ` +
+
+        for (let i = 0; i < this.barIndexNum; i++) {
+            const barColor = barColors[Math.floor(listCounts[i] * barColorRatio)];
+            const barBackground = `linear-gradient(to top, #${barColor}, #${barColor} ` +
                 `${listCounts[i]}px, transparent ${listCounts[i]}px, transparent)`;
             var barText = listCounts[i] ?
                 `${listMessages[i]}<br><br>${listTimes[i]} コメ ${listCounts[i]}` : '';
@@ -199,8 +197,8 @@ display: none;
     };
     // set mouse functions
     NicoHeatGraph.prototype.addMousefunc = function($canvas){
-        let $commentgraph = this.$commentgraph;
-        let $commentlist = this.$commentlist;
+        const $commentgraph = this.$commentgraph;
+        const $commentlist = this.$commentlist;
         function mouseOverFunc() {
             $commentlist.css({
                 'left': $(this).offset().left,
@@ -232,20 +230,19 @@ display: none;
         });
 
         /* 1 Dom Style Watcher本体 監視する側*/
-        var domStyleWatcher = {
+        const domStyleWatcher = {
             Start: function(tgt, styleobj){
                 function eventHappen(data1, data2){
                     var throwval = tgt.css(styleobj);
                     tgt.trigger('domStyleChange', [throwval]);
                 }
-                var tge = tgt[0];
-                var filter = ['style'];
-                var options = {
+                const filter = ['style'];
+                const options = {
                     attributes: true,
                     attributeFilter: filter
                 };
-                var mutOb = new MutationObserver(eventHappen);
-                mutOb.observe(tge, options);
+                const mutOb = new MutationObserver(eventHappen);
+                mutOb.observe( tgt[0], options);
                 return mutOb;
             },
             Stop: function(mo){
@@ -253,20 +250,20 @@ display: none;
             }
         };
         function catchEvent(event, value){
-            var playerWidth=parseFloat(value);
-            var barIndexNum=$('.commentbar').length;
+            const playerWidth=parseFloat(value);
+            const barIndexNum=$('.commentbar').length;
             $commentgraph.width(playerWidth);
             $('.commentbar').width(playerWidth /barIndexNum);
         }
-        var target = $canvas;
-        var styleobj = 'width';
+        const target = $canvas;
+        const styleobj = 'width';
         target.on('domStyleChange', catchEvent);//イベントを登録
         var dsw = domStyleWatcher.Start(target, styleobj);//監視開始
         //domStyleWatcher.Stop(dsw);//監視終了
     };
 
     NicoHeatGraph.prototype.load = function(){
-        let self=this;
+        const self=this;
         getCommentData().done(function(data, textStatus, jqXHR){
             this.canvas=$("#CommentRenderer").children('canvas').eq(0);
             self.drowgraph(data,this.canvas);
@@ -281,15 +278,15 @@ display: none;
     };
 
     // Main
-    var heatgraph = new NicoHeatGraph();
+    const heatgraph = new NicoHeatGraph();
     heatgraph.drawCoordinate();
     heatgraph.load();
     //リロード
-    let $reloadbutton=$('.ActionButton.ReloadButton').eq(0);
+    const $reloadbutton=$('.ActionButton.ReloadButton').eq(0);
+    const $startbutton=$('.VideoStartButtonContainer').eq(0);
     $reloadbutton.click(function(e) {
         heatgraph.reload();
     });
-    let $startbutton=$('.VideoStartButtonContainer').eq(0);
     $startbutton.click(function(e) {
         heatgraph.reload();
     });
