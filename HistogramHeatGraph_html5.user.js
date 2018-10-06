@@ -29,9 +29,11 @@
         drawCoordinate() {
             const $commentgraph = this.$commentgraph;
             const $commentlist = this.$commentlist;
+            if(!($('#comment-graph').length)) {
+                $('.PlayerContainer').eq(0).append($commentgraph);
+                $('.MainContainer').eq(0).append($commentlist);
+            }
             this.$canvas = $("#CommentRenderer").children('canvas').eq(0);
-            $('.PlayerContainer').eq(0).append($commentgraph);
-            $('.MainContainer').eq(0).append($commentlist);
             const styleString = `
 #comment-graph :hover{
 -webkit-filter: hue-rotate(180deg);
@@ -209,7 +211,7 @@ display: none;
                         attributeFilter: filter
                     };
                     const mutOb = new MutationObserver(eventHappen);
-                    mutOb.observe(tgt[0], options);
+                    mutOb.observe(tgt, options);
                     return mutOb;
                 },
                 Stop: function (mo) {
@@ -223,8 +225,8 @@ display: none;
                 $commentgraph.width(playerWidth);
                 $('.commentbar').width(playerWidth / barIndexNum);
             }
-            const target = $canvas;
-            target.on('domStyleChange', catchEvent);//イベントを登録
+            const target = document.getElementById('CommentRenderer').firstChild
+            target.addEventListener('domStyleChange', catchEvent);//イベントを登録
             domStyleWatcher.Start(target, 'width');//監視開始
             //domStyleWatcher.Stop(dsw);//監視終了
         }
