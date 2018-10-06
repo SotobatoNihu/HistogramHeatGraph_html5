@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name           HistogramHeatGraph_html5.user.js
 // @namespace      sotoba
-// @version        1.1.3.20181001
+// @version        1.1.4.20181007
 // @description    ニコニコ動画のコメントをグラフで表示(html5版)※コメントをリロードすることでグラフを再描画します
+// @match          http://www.nicovideo.jp/*
 // @match          http://www.nicovideo.jp/watch/*
-// @include        http://www.nicovideo.jp/watch/*
 // @require        https://code.jquery.com/jquery-3.2.1.min.js
 // @grant          none
 // ==/UserScript==
@@ -44,7 +44,7 @@ display: none;
             const style = document.createElement('style');
             style.appendChild(document.createTextNode(styleString));
             document.body.appendChild(style);
-            const playerWidth = parseFloat(this.$canvas.css("width")) | this.GRAPHDEFWIDTH;
+            const playerWidth = parseFloat(this.$canvas.css('width')) | this.GRAPHDEFWIDTH;
             $commentgraph.height(this.GRAPHHEIGHT);
             $commentgraph.width(playerWidth);
             $commentgraph.css({
@@ -250,6 +250,7 @@ display: none;
                     .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
                 return data
             } else {
+
                 const url = `http://flapi.nicovideo.jp/api/getthreadkey?thread=${thread_id}`
                 const response1 = await fetch(url, {mode: 'cors'})
                     .then(response => response.text())
@@ -286,7 +287,7 @@ display: none;
         //reload when start button pushed
         const startButtons = document.getElementsByClassName('VideoStartButtonContainer')
         for (let startbutton of startButtons ) {
-            startbutton.addEventListener("click", ()=>{
+            startbutton.addEventListener('click', ()=>{
                 console.log("comment reload.")
                 heatgraph.reload()
             }, false)
@@ -295,10 +296,16 @@ display: none;
         // reload when reload button pushed
         const reloadButtons = document.getElementsByClassName('ReloadButton')
         for (let reloadButton of reloadButtons) {
-            reloadButton.addEventListener("click", ()=>{
+            reloadButton.addEventListener('click', ()=>{
                 console.log("comment reload.")
                 heatgraph.reload()
             }, false)
+        }
+        const links = document.getElementsByTagName('a');
+        for (const link of links) {
+            link.addEventListener('click', () => {
+                heatgraph.reload()
+            });
         }
 
     }
