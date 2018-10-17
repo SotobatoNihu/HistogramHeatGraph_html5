@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name           HistogramHeatGraph_html5.user.js
 // @namespace      sotoba
-// @version        1.1.4.20181007
+// @version        1.1.5.20181017
 // @description    ニコニコ動画のコメントをグラフで表示(html5版)※コメントをリロードすることでグラフを再描画します
-// @match          http://www.nicovideo.jp/*
-// @match          http://www.nicovideo.jp/watch/*
+// @homepageURL    https://github.com/SotobatoNihu/HistogramHeatGraph_html5
+// @match          https://www.nicovideo.jp/*
+// @match          https://www.nicovideo.jp/watch/*
 // @require        https://code.jquery.com/jquery-3.2.1.min.js
 // @grant          none
 // ==/UserScript==
@@ -246,17 +247,17 @@ display: none;
                 user_id = ApiJsonData.viewer.id;
             }
             if (video_id.startsWith('sm') || video_id.startsWith('nm')) {
-                const url = `http://nmsg.nicovideo.jp/api/thread?thread=${thread_id}&version=20061206&res_from=-1000&scores=1`
+                const url = `https://nmsg.nicovideo.jp/api/thread?thread=${thread_id}&version=20061206&res_from=-1000&scores=1`
                 const data = await fetch(url, {mode: 'cors'})
                     .then(response => response.text())
                     .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
                 return data
             } else {
 
-                const url = `http://flapi.nicovideo.jp/api/getthreadkey?thread=${thread_id}`
+                const url = `https://flapi.nicovideo.jp/api/getthreadkey?thread=${thread_id}`
                 const response1 = await fetch(url, {mode: 'cors'})
                     .then(response => response.text())
-                const url2 = `http://nmsg.nicovideo.jp/api/thread?thread=${thread_id}&version=20061206&res_from=-1000&scores=1&user=${user_id}&${response1}`
+                const url2 = `https://nmsg.nicovideo.jp/api/thread?thread=${thread_id}&version=20061206&res_from=-1000&scores=1&user=${user_id}&${response1}`
                 const data = await fetch(url2, {mode: 'cors'})
                     .then(response => response.text())
                     .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
