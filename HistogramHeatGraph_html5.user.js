@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           HistogramHeatGraph_html5.user.js
 // @namespace      sotoba
-// @version        1.1.5.20181017
+// @version        1.1.8.20210814
 // @description    ニコニコ動画のコメントをグラフで表示(html5版)※コメントをリロードすることでグラフを再描画します
 // @homepageURL    https://github.com/SotobatoNihu/HistogramHeatGraph_html5
 // @match          https://www.nicovideo.jp/*
@@ -30,11 +30,11 @@
         drawCoordinate() {
             const $commentgraph = this.$commentgraph;
             const $commentlist = this.$commentlist;
-            if(!($('#comment-graph').length)) {
+            if (!($('#comment-graph').length)) {
                 $('.PlayerContainer').eq(0).append($commentgraph);
                 $('.MainContainer').eq(0).append($commentlist);
             }
-            this.$canvas = $("#CommentRenderer").children('canvas').eq(0);
+            this.$canvas = $(".CommentRenderer").eq(0);
             const styleString = `
 #comment-graph :hover{
 -webkit-filter: hue-rotate(180deg);
@@ -75,8 +75,8 @@ display: none;
             const $commentgraph = this.$commentgraph;
             const $commentlist = this.$commentlist;
             const ApiJsonData = JSON.parse(document.getElementById('js-initial-watch-data').getAttribute('data-api-data'))
-            const playerWidth = parseFloat($canvas.css("width"));
-            const videoTotalTime = ApiJsonData.video.dmcInfo !== null ? ApiJsonData.video.dmcInfo.video.length_seconds : ApiJsonData.video.duration;
+            const playerWidth = $commentgraph.width();
+            const videoTotalTime = ApiJsonData.video.duration;
             let barTimeInterval;
 
             //TODO 非常に長い（２，３時間以上）動画の処理
@@ -107,8 +107,12 @@ display: none;
 
             const MAXCOMMENTNUM = this.MAXCOMMENTNUM;
 
-            $(commentData).find('chat').each(function (index) {
-                let vpos = $(this).attr('vpos') / 100;
+            for (let item of commentData) {
+                if (item['chat'] === undefined) {
+                    console.dir(item)
+                    continue;
+                }
+                let vpos = item.chat.vpos / 100;
                 //動画長を超えた時間のpostがあるため対処
                 if (videoTotalTime <= vpos) {
                     vpos = videoTotalTime;
@@ -116,10 +120,11 @@ display: none;
                 const section = Math.floor(vpos / barTimeInterval);
                 listCounts[section]++;
                 if (listCounts[section] <= MAXCOMMENTNUM) {
-                    const comment = $(this).text().replace(/"|<|&lt;/g, ' ').replace(/\n/g, '<br>');
+                    const comment = item.chat.content.replace(/"|<|&lt;/g, ' ').replace(/\n/g, '<br>');
                     listMessages[section] += comment + '<br>';
                 }
-            });
+            }
+
 
             let starttime = 0;
             let nexttime = 0;
@@ -226,49 +231,40 @@ display: none;
                 $commentgraph.width(playerWidth);
                 $('.commentbar').width(playerWidth / barIndexNum);
             }
-            const target = document.getElementById('CommentRenderer').firstChild
-            target.addEventListener('domStyleChange', catchEvent);//イベントを登録
-            domStyleWatcher.Start(target, 'width');//監視開始
+
+            const target = document.getElementsByClassName('CommentRenderer')[0];
+            if (target) {
+                target.addEventListener('domStyleChange', catchEvent);//イベントを登録
+                domStyleWatcher.Start(target, 'width');//監視開始
+            }
+
             //domStyleWatcher.Stop(dsw);//監視終了
         }
 
         async getCommentData() {
             const ApiJsonData = await JSON.parse(document.getElementById('js-initial-watch-data').getAttribute('data-api-data'));
-            let thread_id;
-            let video_id;
-            let user_id;
-            if (ApiJsonData.video.dmcInfo !== null) {
-                thread_id = ApiJsonData.video.dmcInfo.thread.thread_id;
-                video_id = ApiJsonData.video.dmcInfo.video.video_id;
-                user_id = ApiJsonData.video.dmcInfo.user.user_id;
-            } else {
-                thread_id = ApiJsonData.thread.ids.default;
-                video_id = ApiJsonData.video.id;
-                user_id = ApiJsonData.viewer.id;
+            if (!ApiJsonData) {
+                return;
             }
-            if (video_id.startsWith('sm') || video_id.startsWith('nm')) {
-                const url = `https://nmsg.nicovideo.jp/api/thread?thread=${thread_id}&version=20061206&res_from=-1000&scores=1`
-                const data = await fetch(url, {mode: 'cors'})
-                    .then(response => response.text())
-                    .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
-                return data
-            } else {
+            const threads = ApiJsonData.comment.threads;
+            const normalCommentId = threads.findIndex(c => c.label === 'default');
 
-                const url = `https://flapi.nicovideo.jp/api/getthreadkey?thread=${thread_id}`
-                const response1 = await fetch(url, {mode: 'cors'})
-                    .then(response => response.text())
-                const url2 = `https://nmsg.nicovideo.jp/api/thread?thread=${thread_id}&version=20061206&res_from=-1000&scores=1&user=${user_id}&${response1}`
-                const data = await fetch(url2, {mode: 'cors'})
-                    .then(response => response.text())
-                    .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
-                return data
-            }
+            const server = threads[normalCommentId]["server"];
+            const threadId = threads[normalCommentId]["id"];
+
+            const url = `${server}/api.json/thread?thread=${threadId}&version=20090904&res_from=-1000&scores=1`
+            const params = {
+                mode: 'cors',
+            };
+            const data = await fetch(url, params)
+                .then(response => response.text())
+            return JSON.parse(data);
         }
 
         load() {
             const self = this;
             this.getCommentData().then(data => {
-                    this.canvas = $('#CommentRenderer').children('canvas').eq(0);
+                    this.canvas = $('.CommentRenderer').eq(0);
                     self.drowgraph(data, this.canvas)
                     self.addMousefunc(this.canvas)
                 }
@@ -283,14 +279,13 @@ display: none;
     // Main
     const heatgraph = new NicoHeatGraph();
     heatgraph.drawCoordinate();
-    heatgraph.load();
 
-    window.onload = () =>{
-
+    window.onload = () => {
+        heatgraph.load();
         //reload when start button pushed
         const startButtons = document.getElementsByClassName('VideoStartButtonContainer')
-        for (let startbutton of startButtons ) {
-            startbutton.addEventListener('click', ()=>{
+        for (let startbutton of startButtons) {
+            startbutton.addEventListener('click', () => {
                 console.log("comment reload.")
                 heatgraph.reload()
             }, false)
@@ -299,7 +294,7 @@ display: none;
         // reload when reload button pushed
         const reloadButtons = document.getElementsByClassName('ReloadButton')
         for (let reloadButton of reloadButtons) {
-            reloadButton.addEventListener('click', ()=>{
+            reloadButton.addEventListener('click', () => {
                 console.log("comment reload.")
                 heatgraph.reload()
             }, false)
